@@ -94,6 +94,12 @@ app.post('/refresh', async (req, res) => {
     })
   }
   const user = await AccountModel.find({name: data.user});
+  if(user.length <= 0){
+    return res.send({
+      success: false,
+      error: "Niepoprawny token"
+    })
+  }
   const accessToken = jwt.sign({ user: user[0].name }, process.env.JWT_KEY, {
     expiresIn: '1d',
   });
@@ -104,6 +110,35 @@ app.post('/refresh', async (req, res) => {
     success: true,
     accessToken,
     refreshToken
+  })
+})
+
+app.post('/me', async (req, res) => {
+  const token = req.body.token;
+  if(!token){
+    return res.send({
+      success: false,
+      error: "Brak tokenu"
+    })
+  }
+  const data = jwt.decode(token) as {user: string} | null;
+  if(!data){
+    return res.send({
+      success: false,
+      error: "Niepoprawny token"
+    })
+  }
+  const user = await AccountModel.find({name: data.user});
+  if(user.length <= 0){
+    return res.send({
+      success: false,
+      error: "Niepoprawny token"
+    })
+  }
+  delete user[0].password;
+  res.send({
+    success: true,
+    user: user[0],
   })
 })
 
