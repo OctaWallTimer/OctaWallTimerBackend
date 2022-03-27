@@ -150,7 +150,7 @@ app.post('/refresh', async (req: express.Request, res: express.Response) => {
     })
 })
 
-app.post('/me', async (req: express.Request, res: express.Response) => {
+app.post('/me', authMiddleware, async (req: express.Request, res: express.Response) => {
     const user: AccountDB = req.user;
     delete user.password;
     res.send({
