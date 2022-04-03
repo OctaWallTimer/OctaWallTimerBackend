@@ -275,11 +275,11 @@ app.get('/timetable', authMiddleware, async (req: express.Request, res: express.
             if (!(task in values)) {
                 values[task] = 0;
             }
-            if (time.start.getTime() >= start.getTime() && time.end.getTime() <= end.getTime()) {
-                values[task] += time.end.getTime() - time.start.getTime();
+            if (time.start.getTime() >= start.getTime() && (time.end == null || time.end.getTime() <= end.getTime())) {
+                values[task] += (time.end == null ? (new Date()).getTime() : time.end.getTime()) - time.start.getTime();
             } else if (time.start.getTime() >= start.getTime() && time.start.getTime() <= end.getTime()) {
                 values[task] += end.getTime() - time.start.getTime();
-            } else if (time.end.getTime() >= start.getTime() && time.end.getTime() <= end.getTime()) {
+            } else if (time.end != null && time.end.getTime() >= start.getTime() && time.end.getTime() <= end.getTime()) {
                 values[task] += time.end.getTime() - start.getTime();
             }
         }
