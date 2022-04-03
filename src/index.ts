@@ -264,7 +264,7 @@ app.post('/debug/time', authMiddleware, async (req: express.Request, res: expres
 })
 app.get('/timetable', authMiddleware, async (req: express.Request, res: express.Response) => {
     const user: AccountDB = req.user;
-    const mode = req.body.mode || 'day';
+    const mode = req.query.mode || 'day';
     const times = await TaskTimeModel.find({user: user._id});
     let data: {start: number, end: number, tasks: { [task: string]: number }}[] = [];
     const getBetween = (start: Date, end: Date) => {
