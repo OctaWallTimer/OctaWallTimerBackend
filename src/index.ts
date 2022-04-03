@@ -1,5 +1,5 @@
 import express, {Request, Response, NextFunction} from 'express';
-import mongoose from 'mongoose';
+import mongoose, {ObjectId} from 'mongoose';
 import * as jwt from 'jsonwebtoken';
 import {AccountDB, AccountModel} from "./AccountModel";
 
@@ -207,7 +207,7 @@ app.post('/time', authMiddleware, async (req: express.Request, res: express.Resp
         });
     }
     let task = null;
-    try{
+    try {
         const tasks = await TaskModel.find({_id: req.body.task});
         if (tasks.length <= 0) {
             return res.send({
@@ -216,7 +216,7 @@ app.post('/time', authMiddleware, async (req: express.Request, res: express.Resp
             });
         }
         task = tasks[0];
-    }catch (e){
+    } catch (e) {
         return res.status(500).send({
             success: false,
             error: 'Podano błędne id taska'
@@ -238,14 +238,14 @@ app.post('/debug/time', authMiddleware, async (req: express.Request, res: expres
     const user: AccountDB = req.user;
     await TaskTimeModel.updateMany({user: user._id, end: null}, {end: new Date()});
     const tasks = await TaskModel.find();
-    for (let i = 0; i <tasks.length; i++) {
+    for (let i = 0; i < tasks.length; i++) {
         const task = tasks[i];
-        for(let day = 1; day<7; day++){
-            for(let z = 0; z<10; z++){
+        for (let day = 1; day < 7; day++) {
+            for (let z = 0; z < 10; z++) {
                 let start = new Date();
                 start.setDate(start.getDate() - day);
                 start.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60), Math.floor(Math.random() * 60));
-                let end = new Date(start.getTime() + (Math.random()/2 + 0.5)*60*60*1000);
+                let end = new Date(start.getTime() + (Math.random() / 2 + 0.5) * 60 * 60 * 1000);
 
                 let time = new TaskTimeModel({
                     user: user._id,
@@ -260,6 +260,82 @@ app.post('/debug/time', authMiddleware, async (req: express.Request, res: expres
     }
     return res.send({
         success: true
+    });
+})
+app.get('/timetable', authMiddleware, async (req: express.Request, res: express.Response) => {
+    const user: AccountDB = req.user;
+    const mode = req.body.mode || 'day';
+    const times = await TaskTimeModel.find({user: user._id});
+    let data: {start: number, end: number, tasks: { [task: string]: number }}[] = [];
+    const getBetween = (start: Date, end: Date) => {
+        let values: { [name: string]: number } = {};
+        for (let i = 0; i < times.length; i++) {
+            const time = times[i];
+            const task = time.task.toString();
+            if (!(task in values)) {
+                values[task] = 0;
+            }
+            if (time.start.getTime() >= start.getTime() && time.end.getTime() <= end.getTime()) {
+                values[task] += time.end.getTime() - time.start.getTime();
+            } else if (time.start.getTime() >= start.getTime() && time.start.getTime() <= end.getTime()) {
+                values[task] += end.getTime() - time.start.getTime();
+            } else if (time.end.getTime() >= start.getTime() && time.end.getTime() <= end.getTime()) {
+                values[task] += time.end.getTime() - start.getTime();
+            }
+        }
+        return {
+            start: start.getTime(),
+            end: end.getTime(),
+            tasks: values
+        };
+    }
+    switch (mode) {
+        case 'day':
+            for (let hour = 0; hour < 23; hour++) {
+                const start = new Date();
+                start.setHours(hour, 0, 0, 0);
+                const end = new Date();
+                end.setHours(hour, 59, 59, 999);
+                data.push(getBetween(start, end));
+            }
+            break;
+        case 'week':
+            for (let day = 0; day < 7; day++) {
+                const start = new Date();
+                start.setDate(start.getDate() - 6 + day);
+                start.setHours(0, 0, 0, 0);
+                const end = new Date();
+                end.setDate(end.getDate() - 6 + day);
+                end.setHours(23, 59, 59, 999);
+                data.push(getBetween(start, end));
+            }
+            break;
+        case 'month':
+            for (let day = 0; day < 31; day++) {
+                const start = new Date();
+                start.setDate(start.getDate() - 30 + day);
+                start.setHours(0, 0, 0, 0);
+                const end = new Date();
+                end.setDate(end.getDate() - 30 + day);
+                end.setHours(23, 59, 59, 999);
+                data.push(getBetween(start, end));
+            }
+            break;
+        case 'year':
+            for (let month = 0; month < 12; month++) {
+                const start = new Date();
+                start.setMonth(month, 1)
+                start.setHours(0, 0, 0, 0);
+                const end = new Date();
+                end.setMonth(month + 1, 1)
+                end.setHours(23, 59, 59, 999);
+                data.push(getBetween(start, end));
+            }
+            break;
+    }
+    return res.send({
+        success: true,
+        data
     });
 })
 
