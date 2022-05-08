@@ -56,19 +56,27 @@ export const getTimeTableHandler = async (req: express.Request, res: express.Res
                 data.push(getBetween(start, end));
             }
             break;
-        case 'month':
-            for (let day = 0; day < 31; day++) {
-                const start = new Date();
-                start.setMonth(start.getMonth() - offset);
-                start.setDate(start.getDate() - 30 + day);
-                start.setHours(0, 0, 0, 0);
-                const end = new Date();
-                end.setMonth(end.getMonth() - offset);
-                end.setDate(end.getDate() - 30 + day);
-                end.setHours(23, 59, 59, 999);
+        case 'month':{
+            const start = new Date();
+            const month = start.getMonth() - offset;
+            start.setMonth(month);
+            start.setDate(2-start.getDay());
+            if(start.getDate() != 1 && month == start.getMonth()){
+                start.setDate(start.getDate()-7);
+            }
+            start.setHours(0, 0, 0, 0);
+
+            const end = new Date(start);
+            end.setDate(end.getDate() + 6);
+            end.setHours(23, 59, 59, 999);
+
+            while (start.getMonth() <= month) {
                 data.push(getBetween(start, end));
+                start.setDate(start.getDate() + 7);
+                end.setDate(end.getDate() + 7);
             }
             break;
+        }
         case 'year':
             for (let month = 0; month < 12; month++) {
                 const start = new Date();
