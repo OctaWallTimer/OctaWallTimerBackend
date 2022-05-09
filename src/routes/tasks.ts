@@ -33,3 +33,22 @@ export const postTasksHandler = async (req: express.Request, res: express.Respon
         task
     });
 }
+
+export const updateTasksHandler = async (req: express.Request, res: express.Response) => {
+    const user: AccountDB = req.user;
+    const task = await TaskModel.findOne({_id: req.params.id, user: user._id});
+    if(!task){
+        return res.send({
+            success: false,
+            error: "Nie odnaleziono zadania!"
+        })
+    }
+    if(req.body.name) task.name = req.body.name;
+    if(req.body.color) task.color = req.body.color;
+    if(req.body.icon) task.icon = req.body.icon;
+    await task.save();
+    return res.send({
+        success: true,
+        task
+    });
+}
