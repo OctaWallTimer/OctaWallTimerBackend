@@ -1,11 +1,9 @@
 import express from "express";
 import {AccountDB} from "../AccountModel";
 import {TaskTimeModel} from "../TaskTimeModel";
+import {TimeTableShareModel} from "../TimeTableShareModel";
 
-export const getTimeTableHandler = async (req: express.Request, res: express.Response) => {
-    const user: AccountDB = req.user;
-    const mode = req.query.mode || 'day';
-    const offset = parseInt((req.query.offset || '0') as string);
+async function getTimeTable(user: AccountDB, mode: string, offset: number) {
     const times = await TaskTimeModel.find({user: user._id});
     let data: {start: number, end: number, tasks: { [task: string]: number }}[] = [];
     const getBetween = (start: Date, end: Date) => {
@@ -91,8 +89,34 @@ export const getTimeTableHandler = async (req: express.Request, res: express.Res
             }
             break;
     }
+    return data;
+}
+
+export const getTimeTableHandler = async (req: express.Request, res: express.Response) => {
+    const user: AccountDB = req.user;
+    const mode: string = (req.query.mode || 'day') as string;
+    const offset = parseInt((req.query.offset || '0') as string);
+    const data = await getTimeTable(user, mode, offset);
+
     return res.send({
         success: true,
         data
     });
+}
+
+export const shareLinkHandler = async (req: express.Request, res: express.Response) => {
+    const user: AccountDB = req.user;
+    const mode = req.query.mode || 'day';
+    const offset = parseInt((req.query.offset || '0') as string);
+    const share = new TimeTableShareModel({
+        user,
+        mode,
+        offset,
+    });
+    await share.save();
+
+    return res.send({
+        success: true,
+        link: process.env.BASE_URL + "/share/" + share._id
+    })
 }

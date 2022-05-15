@@ -8,7 +8,7 @@ import {refreshHandler} from './routes/refresh';
 import {meHandler} from './routes/me';
 import {getTasksHandler, postTasksHandler, updateTasksHandler} from "./routes/tasks";
 import {getTimeHandler, postTimeHandler} from "./routes/time";
-import {getTimeTableHandler} from './routes/timetable';
+import {getTimeTableHandler, shareLinkHandler} from './routes/timetable';
 import {fillTimeHandler} from './routes/debug';
 
 require('dotenv').config()
@@ -35,6 +35,7 @@ app.get('/time', authMiddleware, getTimeHandler);
 app.post('/time', authMiddleware, postTimeHandler);
 app.post('/debug/time', authMiddleware, fillTimeHandler);
 app.get('/timetable', authMiddleware, getTimeTableHandler);
+app.post('/share', authMiddleware, shareLinkHandler);
 
 app.listen(port, () => {
     console.log(`Backend listening on port ${port}`);
