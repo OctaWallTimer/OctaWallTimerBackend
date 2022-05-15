@@ -1,0 +1,123 @@
+<%
+const pad = d => d.toString().padStart(2, '0');
+const formatTitle = (timeTableOffset, timeTableMode) => {
+    let now = (new Date()).getTime();
+    const day = 24 * 60 * 60 * 1000;
+    switch (timeTableMode) {
+        case 'day': {
+            const date = new Date(now - day * timeTableOffset);
+            return "Dzień: " + pad(date.getDate()) + "." + pad(date.getMonth() + 1) + "." + date.getFullYear();
+        }
+        case 'week': {
+            const end = new Date(now - 7 * day * timeTableOffset);
+            const start = new Date(now - 7 * day * (timeTableOffset + 1));
+            return "Tydzień: " + pad(start.getDate()) + "." + pad(start.getMonth() + 1) + "." + start.getFullYear() + " - "
+                        + pad(end.getDate()) + "." + pad(end.getMonth() + 1) + "." + end.getFullYear();
+        }
+        case 'month': {
+            const end = new Date(now);
+            end.setMonth(end.getMonth() - timeTableOffset);
+            return "Miesiąc: " + pad(end.getMonth() + 1) + "/" + end.getFullYear();
+        }
+        case 'year': {
+            const end = new Date(now);
+            end.setFullYear(end.getFullYear() - timeTableOffset);
+            return "Rok: " + end.getFullYear().toString();
+        }
+    }
+    return ""
+}
+
+const formatElapsedTime = (num) => {
+    let elapsed = "";
+    num = Math.floor(num / 1000);
+
+    let sec = num % 60;
+    num = Math.floor(num / 60);
+
+    let min = num % 60;
+    num = Math.floor(num / 60);
+
+    let hours = num % 24;
+    num = Math.floor(num / 24);
+
+    let days = num;
+
+    if (days > 0) elapsed += days + "<span>d</span> ";
+    if (hours > 0) elapsed += hours + "<span>h</span> ";
+    if (min > 0) elapsed += min + "<span>min</span> ";
+    if (sec > 0) elapsed += sec + "<span>s</span> ";
+    if (elapsed.length == 0) elapsed = "0<span>s</span>";
+
+    return elapsed;
+}
+%>
+
+<style>
+    body{
+        display: flex;
+        background: #444;
+        align-items: center;
+        justify-content: center;
+    }
+    table{
+        border-spacing: 0;
+    }
+    th{
+        font-weight: 900;
+        font-size: 22px;
+        color: #ffffff;
+    }
+    td{
+        padding: 10px 20px;
+        color: #fff;
+        font-size: 20px;
+    }
+    tr:nth-of-type(2n){
+        background: #00000020;
+    }
+    tr:hover{
+        background: #00000040;
+    }
+    th{
+        background: #00000060;
+        padding: 10px 0;
+    }
+    caption{
+        color: #fff;
+        font-size: 20px;
+        padding: 10px 0;
+    }
+    #container{
+        display:flex;
+        flex-direction:column;
+        align-items: center;
+    }
+    span.time{
+        font-weight: 900;
+    }
+    span.time > span{
+        font-size: 18px;
+        font-weight: 300;
+    }
+</style>
+
+<div id="container">
+    <table>
+        <caption>Statystyki użytkownika <%= user %> (<%= formatTitle(offset,mode) %>)</caption>
+        <thead>
+        <tr>
+            <th>Nazwa</th>
+            <th>Czas</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% for(var i = 0; i<data.length; i++){ %>
+        <tr>
+            <td><%= data[i].name %></td>
+            <td><span class="time"><%- formatElapsedTime(data[i].data.reduce((prev, cur) => prev+cur.time, 0)) %></span></td>
+        </tr>
+        <% } %>
+        </tbody>
+    </table>
+</div>

@@ -1,6 +1,6 @@
 import { Schema, model, ObjectId, Types } from 'mongoose';
 
-interface Task {
+export interface Task {
     user: ObjectId;
     name: string;
     color: string;
